@@ -23,7 +23,7 @@ const menu = function() {
                 type: 'list',
                 message: 'What would you like to do?',
                 name: 'Choices',
-                choices: ['Add Employee', 'Update Employee Role', 'View All Roles', 'Add Role', 'View All Departments', 'Add Department'],
+                choices: ['Add Employee', 'Update Employee Role', 'View All Roles', 'Add Role', 'View All Departments', 'Add Department', 'View Employees'],
             }
         ]
     ).then(res => {
@@ -45,18 +45,28 @@ const menu = function() {
         if (res.Choices === 'Add Employee') {
             addEmpl();
         }
+        if (res.Choices === 'View Employees') {
+            viewEmpl();
+        }
     }).catch(err=> console.log(err))
 }
 
+const viewEmpl = function() {
+    db.query('SELECT * FROM employee', (err, data) => {
+        console.table(data);
+        menu();
+    })
+};
+
 const viewDepart = function() {
-    db.query('SELECT * FROM department',(err, data)=> {
+    db.query('SELECT * FROM department',(err, data) => {
         console.table(data);
         menu();
     })
 };
 
 const viewRoles = function() {
-    db.query('SELECT * FROM role',(err, data)=> {
+    db.query('SELECT * FROM role',(err, data) => {
         console.table(data);
         menu();
     })
@@ -83,12 +93,29 @@ const addEmpl = function() {
         .prompt([
             {
                 type: 'input',
-                message: "What is the Employee's name?",
-                name: 'employee'
+                message: "What is the Employee's first name?",
+                name: 'employeeFirst'
+            },
+            {
+                type: 'input',
+                message: "What is the Employee's last name?",
+                name: 'employeeLast'
+            },
+            {
+                type: 'input',
+                message: 'What is the Role id #?',
+                name: 'roleId'
+            },
+            {
+                type: 'input',
+                message: 'What is the Manager id #?',
+                name: 'mangId'
             }
+
         ]).then(res => {
-            db.query('INSERT INTO employee (name) values (?)', [res.employee], (err, data) => {
+            db.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) values (?,?,?,?)', [res.employeeFirst, res.employeeLast, res.roleId, res.mangId], (err, data) => {
                 console.table(data);
+                console.log(err);
                 menu();
             })
         })
@@ -99,12 +126,24 @@ const addRole = function() {
         .prompt([
             {
                 type: 'input',
-                message: "What is the new role's name?",
-                name: 'role'
-            }
+                message: "What is the new role's title?",
+                name: 'title'
+            },
+            {
+                type: 'input',
+                message: "What is the new role's salary?",
+                name: 'salary'
+            },
+            {
+                type: 'input',
+                message: "What is the new role's department id?",
+                name: 'deptId'
+            },
+
         ]).then(res => {
-            db.query('INSERT INTO role (name) values (?)', [res.role], (err, data) => {
+            db.query('INSERT INTO role (title, salary, department_id) values (?,?,?)', [res.title, res.salary, res.deptId], (err, data) => {
                 console.table(data);
+                console.log(err);
                 menu();
             })
         })
@@ -116,26 +155,20 @@ const updateRole = function() {
     inquirer
         .prompt([
             {
-                type: 'list',
+                type: 'input',
                 message: 'Select the employee to update.',
-                choices: [    db.query('SELECT * FROM employee', (err, data) => {
-                    console.table(data);
-                 })
-                ]
+                name: 'empl'
+            },
+            {
+                type: 'input',
+                message: "What is the employee's new role id?",
+                name: 'roleId'
             }
         ]).then(res => {
-            const empl = res;
-            const roles = db.query('SELECT * FROM role',);
-
-            inquirer.prompt([
-                {
-                    type: 'list',
-                    message: "Select the Employee's new Role.",
-                    name: 'RoleSelect',
-                    choices: [roles],
-                }
-            ]). then(res => {
-                db.query(`UPDATE employee SET role_id = {empl}`)
+            db.query(`UPDATE employee, SET role_id = ${res.roleId} WHERE id = ${res.empl}`, (err, data) => {
+                console.table(data);
+                console.log(err);
+                menu();
             })
         })
 }
